@@ -68,11 +68,7 @@ export default function Login() {
             No account? <Link to="/register">Register here</Link>
           </p>
 
-          <div style={{ marginTop: 32, padding: 16, background: '#f0f4ff', borderRadius: 6, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            <strong style={{ display: 'block', marginBottom: 6 }}>Demo Credentials</strong>
-            Admin: admin@iiitconf.ac.in / admin123<br/>
-            Create your own author/reviewer account via Register
-          </div>
+
         </div>
       </div>
     </div>
