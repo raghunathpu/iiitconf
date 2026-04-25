@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 // Auth Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 
 // Shared
 import PaperDetail from './pages/PaperDetail';
@@ -66,6 +67,7 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Protected - Author */}

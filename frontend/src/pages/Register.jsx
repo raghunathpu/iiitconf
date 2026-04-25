@@ -1,14 +1,28 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { register } from '../services/api';
+import { register, sendRegisterOtp } from '../services/api';
 
 export default function Register() {
   const { loginUser } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'author', institution: '', expertise_tags: '' });
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'author', institution: '', expertise_tags: '', otp: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleSendOtp = async e => {
+    e.preventDefault();
+    setError(''); setLoading(true);
+    try {
+      await sendRegisterOtp({ email: form.email });
+      setStep(2);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -51,49 +65,66 @@ export default function Register() {
 
           {error && <div className="alert alert-error">{error}</div>}
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input className="form-control" required value={form.name}
-                onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Dr. / Prof. / Your full name" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input className="form-control" type="email" required value={form.email}
-                onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="you@institution.ac.in" />
-            </div>
-            <div className="form-row">
+          {step === 1 ? (
+            <form onSubmit={handleSendOtp}>
               <div className="form-group">
-                <label className="form-label">Password</label>
-                <input className="form-control" type="password" required minLength={6} value={form.password}
-                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="Min. 6 characters" />
+                <label className="form-label">Full Name</label>
+                <input className="form-control" required value={form.name}
+                  onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Dr. / Prof. / Your full name" />
               </div>
               <div className="form-group">
-                <label className="form-label">Register As</label>
-                <select className="form-control" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
-                  <option value="author">Author / Student</option>
-                  <option value="reviewer">Reviewer / Expert</option>
-                </select>
+                <label className="form-label">Email Address</label>
+                <input className="form-control" type="email" required value={form.email}
+                  onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="you@institution.ac.in" />
               </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Institution</label>
-              <input className="form-control" value={form.institution}
-                onChange={e => setForm(p => ({ ...p, institution: e.target.value }))} placeholder="IIIT Hyderabad / IIT Bombay..." />
-            </div>
-            {form.role === 'reviewer' && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input className="form-control" type="password" required minLength={6} value={form.password}
+                    onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="Min. 6 characters" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Register As</label>
+                  <select className="form-control" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
+                    <option value="author">Author / Student</option>
+                    <option value="reviewer">Reviewer / Expert</option>
+                  </select>
+                </div>
+              </div>
               <div className="form-group">
-                <label className="form-label">Expertise Areas</label>
-                <input className="form-control" value={form.expertise_tags}
-                  onChange={e => setForm(p => ({ ...p, expertise_tags: e.target.value }))}
-                  placeholder="Machine Learning, NLP, Computer Vision" />
-                <div className="form-hint">Comma-separated topics you can review</div>
+                <label className="form-label">Institution</label>
+                <input className="form-control" value={form.institution}
+                  onChange={e => setForm(p => ({ ...p, institution: e.target.value }))} placeholder="IIIT Hyderabad / IIT Bombay..." />
               </div>
-            )}
-            <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={loading}>
-              {loading ? 'Creating Account...' : 'Create Account'}
-            </button>
-          </form>
+              {form.role === 'reviewer' && (
+                <div className="form-group">
+                  <label className="form-label">Expertise Areas</label>
+                  <input className="form-control" value={form.expertise_tags}
+                    onChange={e => setForm(p => ({ ...p, expertise_tags: e.target.value }))}
+                    placeholder="Machine Learning, NLP, Computer Vision" />
+                  <div className="form-hint">Comma-separated topics you can review</div>
+                </div>
+              )}
+              <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={loading}>
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">Enter OTP</label>
+                <input className="form-control" required value={form.otp}
+                  onChange={e => setForm(p => ({ ...p, otp: e.target.value }))} placeholder="6-digit code" />
+                <div className="form-hint" style={{marginTop: 8}}>An OTP was sent to {form.email}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="button" className="btn btn-secondary btn-lg" onClick={() => setStep(1)} style={{ flex: 1 }}>Back</button>
+                <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ flex: 2 }}>
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+          )}
 
           <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Already have an account? <Link to="/login">Sign in</Link>
